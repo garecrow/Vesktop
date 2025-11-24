@@ -13,37 +13,30 @@ import { Settings } from "./settings";
 const OVERLAY_HOTKEY = "CommandOrControl+Shift+O";
 
 let overlayWin: BrowserWindow | undefined;
-const syncToPrimaryDisplay = () => overlayWin && syncOverlayBounds(overlayWin);
 
 function getOverlayUrl() {
     const branch = Settings.store.discordBranch;
     const subdomain = branch === "canary" || branch === "ptb" ? `${branch}.` : "";
 
-    return `https://${subdomain}discord.com/overlay`;
+    return `https://${subdomain}discord.com/app`;
 }
 
 function buildOverlayOptions(): BrowserWindowConstructorOptions {
-    const { bounds } = screen.getPrimaryDisplay();
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const width = Math.min(primaryDisplay.workAreaSize.width, 1280);
+    const height = Math.min(primaryDisplay.workAreaSize.height, 720);
 
     return {
-        x: bounds.x,
-        y: bounds.y,
-        width: bounds.width,
-        height: bounds.height,
+        width,
+        height,
         frame: false,
         transparent: true,
         alwaysOnTop: true,
-        fullscreenable: false,
-        maximizable: false,
-        minimizable: false,
-        movable: false,
-        resizable: false,
-        focusable: true,
         show: false,
         skipTaskbar: true,
+        resizable: true,
         hasShadow: false,
         backgroundColor: "#00000000",
-        type: "toolbar",
         webPreferences: {
             preload: join(__dirname, "preload.js"),
             contextIsolation: true,
@@ -55,30 +48,14 @@ function buildOverlayOptions(): BrowserWindowConstructorOptions {
     };
 }
 
-function syncOverlayBounds(win: BrowserWindow) {
-    const { bounds } = screen.getPrimaryDisplay();
-
-    win.setBounds({
-        x: bounds.x,
-        y: bounds.y,
-        width: bounds.width,
-        height: bounds.height
-    });
-}
-
 function createOverlayWindow() {
     if (overlayWin) return overlayWin;
 
     overlayWin = new BrowserWindow(buildOverlayOptions());
-    overlayWin.setAlwaysOnTop(true, "screen-saver");
     overlayWin.webContents.setUserAgent(BrowserUserAgent);
     overlayWin.setMenuBarVisibility(false);
     overlayWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     overlayWin.loadURL(getOverlayUrl());
-
-    screen.on("display-metrics-changed", syncToPrimaryDisplay);
-    screen.on("display-added", syncToPrimaryDisplay);
-    screen.on("display-removed", syncToPrimaryDisplay);
 
     overlayWin.on("closed", () => {
         overlayWin = undefined;
@@ -89,7 +66,6 @@ function createOverlayWindow() {
 
 export function showOverlayWindow() {
     const win = overlayWin ?? createOverlayWindow();
-    syncOverlayBounds(win);
     win.showInactive();
     win.focus();
     return win;
@@ -126,8 +102,4 @@ export function destroyOverlayWindow() {
 
     overlayWin.destroy();
     overlayWin = undefined;
-
-    screen.off("display-metrics-changed", syncToPrimaryDisplay);
-    screen.off("display-added", syncToPrimaryDisplay);
-    screen.off("display-removed", syncToPrimaryDisplay);
 }
