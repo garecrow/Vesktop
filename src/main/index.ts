@@ -16,6 +16,7 @@ import { DATA_DIR } from "./constants";
 import { createFirstLaunchTour } from "./firstLaunch";
 import { createWindows, mainWin } from "./mainWindow";
 import { registerMediaPermissionsHandler } from "./mediaPermissions";
+import { destroyOverlayWindow, registerOverlayShortcuts } from "./overlayWindow";
 import { registerScreenShareHandler } from "./screenShare";
 import { Settings, State } from "./settings";
 import { setAsDefaultProtocolClient } from "./utils/setAsDefaultProtocolClient";
@@ -32,6 +33,7 @@ export let enableHardwareAcceleration = true;
 
 function init() {
     setAsDefaultProtocolClient("discord");
+    registerOverlayShortcuts();
 
     const { disableSmoothScroll, hardwareAcceleration, hardwareVideoAcceleration } = Settings.store;
 
@@ -149,6 +151,8 @@ export let darwinURL: string | undefined;
 app.on("open-url", (_, url) => {
     darwinURL = url;
 });
+
+app.on("before-quit", destroyOverlayWindow);
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();

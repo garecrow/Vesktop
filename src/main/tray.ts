@@ -8,6 +8,7 @@ import { app, BrowserWindow, Menu, Tray } from "electron";
 
 import { createAboutWindow } from "./about";
 import { AppEvents } from "./events";
+import { toggleOverlayWindow } from "./overlayWindow";
 import { Settings } from "./settings";
 import { resolveAssetPath } from "./userAssets";
 import { clearData } from "./utils/clearData";
@@ -65,6 +66,10 @@ export async function initTray(win: BrowserWindow, setIsQuitting: (val: boolean)
             async click() {
                 await clearData(win);
             }
+        },
+        process.platform === "linux" && {
+            label: "Toggle Overlay",
+            click: toggleOverlayWindow
         },
         {
             type: "separator"

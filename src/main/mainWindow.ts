@@ -28,6 +28,7 @@ import { BrowserUserAgent, DEFAULT_HEIGHT, DEFAULT_WIDTH, MIN_HEIGHT, MIN_WIDTH 
 import { AppEvents } from "./events";
 import { darwinURL } from "./index";
 import { sendRendererCommand } from "./ipcCommands";
+import { toggleOverlayWindow } from "./overlayWindow";
 import { Settings, State, VencordSettings } from "./settings";
 import { createSplashWindow, updateSplashMessage } from "./splash";
 import { destroyTray, initTray } from "./tray";
@@ -133,6 +134,11 @@ function initMenuBar(win: BrowserWindow) {
                       type: "separator"
                   }
               ] satisfies MenuItemList)),
+        process.platform === "linux" && {
+            label: "Toggle Overlay",
+            accelerator: "CmdOrCtrl+Shift+O",
+            click: toggleOverlayWindow
+        },
         {
             label: "Quit",
             accelerator: wantCtrlQ ? "CmdOrCtrl+Q" : void 0,
