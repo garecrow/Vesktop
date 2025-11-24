@@ -39,7 +39,7 @@ function buildOverlayOptions(): BrowserWindowConstructorOptions {
         movable: false,
         resizable: false,
         enableLargerThanScreen: true,
-        focusable: true,
+        focusable: false,
         show: false,
         skipTaskbar: true,
         hasShadow: false,
@@ -78,6 +78,18 @@ function createOverlayWindow() {
     overlayWin.setIgnoreMouseEvents(true, { forward: true });
     overlayWin.loadURL(getOverlayUrl());
 
+    overlayWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+    overlayWin.webContents.on("will-navigate", (event, url) => {
+        if (url !== getOverlayUrl()) {
+            event.preventDefault();
+            overlayWin?.loadURL(getOverlayUrl());
+        }
+    });
+
+    overlayWin.webContents.on("did-fail-load", () => {
+        overlayWin?.loadURL(getOverlayUrl());
+    });
+
     screen.on("display-metrics-changed", syncToPrimaryDisplay);
     screen.on("display-added", syncToPrimaryDisplay);
     screen.on("display-removed", syncToPrimaryDisplay);
@@ -92,9 +104,8 @@ function createOverlayWindow() {
 export function showOverlayWindow() {
     const win = overlayWin ?? createOverlayWindow();
     syncOverlayBounds(win);
-    win.setIgnoreMouseEvents(false);
+    win.setIgnoreMouseEvents(true, { forward: true });
     win.showInactive();
-    win.focus();
     return win;
 }
 
